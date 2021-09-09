@@ -200,6 +200,7 @@ module Frame_t
     integer :: nConference
     type(rest) :: rest
     integer, allocatable, dimension(:) :: pl_save_gid
+    real(8) :: infVisRatio
   end type
 
   type tmcomp

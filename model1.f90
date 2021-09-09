@@ -184,7 +184,7 @@ contains
 
     type(area), pointer :: area_
     type(place), pointer, dimension(:) :: place_
-    real(8) :: R0ovw(PL_MAX)
+    real(8) :: R0ovw(PL_MAX), x
 
     frm_rndstat = 1
     gl_n_people = 0
@@ -205,16 +205,27 @@ contains
 
     call readOverwriteR0(city_, R0ovw) 
 
-    write(*,*) '1 sizeof(plset_save) = ', size(plset_save)
+    !write(*,*) '1 sizeof(plset_save) = ', size(plset_save)
 
     call readRest(city_%rest)
-    write(*,*) '2 sizeof(plset_save) = ', size(plset_save)
+    !write(*,*) '2 sizeof(plset_save) = ', size(plset_save)
     call setupRest(city_)
-    write(*,*) '3 sizeof(plset_save) = ', size(plset_save)
+    !write(*,*) '3 sizeof(plset_save) = ', size(plset_save)
 
     call setExtraCfg(city_, R0ovw, plset_save)
 
-    close(ist)
+    ! read optional parameters
+    !   * if #items gets large, move to a routine.
+    city_%infVisRatio = 0.0d0
+    do 
+      read(ist,*,END=999) temp;
+      select case (temp)
+      case ('infVisRatio:')
+        read(ist,*) city_%infVisRatio
+      end select
+    end do
+
+999 close(ist)
 
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1068,7 +1079,7 @@ contains
     implicit none
     integer      :: seed
     type(person) :: p ! implicitly passed pointer to object
-    integer       :: t, isize, today, i, iConf
+    integer       :: t, isize, today, i, j, iConf
     type(sched)   :: sch
     logical       :: exists
     type(tmcomp)  :: tm
@@ -1120,6 +1131,14 @@ contains
 
         sch%time  (sch%n) = city__%conference(iConf)%start_time
         sch%pl_gid(sch%n) = city__%conference(iConf)%pl_gid
+
+        if (i.eq.1 .and. getRand(p%pe_gid+1) .lt. city__%infVisRatio) then 
+          ! randomly get infected when they go to the site.
+          gl_person_nIntervEvt(p%pe_gid) = gl_person_nIntervEvt(p%pe_gid) + 1
+          j = gl_person_nIntervEvt(p%pe_gid)
+          gl_person_intervEvt(p%pe_gid, j)%kind = INTERV_INF
+          gl_person_intervEvt(p%pe_gid, j)%time = sch%time(sch%n)
+        end if
 
         ! to do: make sure visit a restaurant every day
         sch%n = sch%n + 1
