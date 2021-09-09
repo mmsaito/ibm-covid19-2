@@ -626,6 +626,7 @@ contains
       call nvtxStartRange("mkSched", __LINE__)
       !$acc wait
 
+      ! 2020-09-08: Q. Is this loop carried out sequentially?
       do i = 1, size(city_%area)
         do j = 1, size(city_%area(i)%person)
           call mkSched(city_, city_%area(i)%person(j), frm_rndstat)

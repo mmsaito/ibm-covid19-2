@@ -1082,10 +1082,6 @@ contains
     integer :: i_area, n_rest, i_rest, n_visit_games
     logical :: doesMatch
 
-
-    !call schedHaus(p, t, sch, seed)
-    !return
-
     tm    = timecomp(t)
     today = tm%day * idays
     hl_kind = gl_person_health(p%pe_gid, 1)%kind
@@ -1093,9 +1089,8 @@ contains
     ! get smallest pe_gid among VISITORS (quick hack)
     if (dayFstEval .eq. INT4_MIN) dayFstEval = today
 
-    sch%n = 0
-
     if (today .eq. dayFstEval) then
+      sch%n = 0  ! 2020-09-09: the init is moved here!
       ! not run: 
       !  * You need to get a scope of city object!
       !  * E.g. you have via common pointing it. But it can be done in Fortran?
@@ -1144,6 +1139,14 @@ contains
       end do
     else
       ! to do: resort using qsort
+    end if
+
+    ! As for "sch%n", we do somewhat dangerous manip. 
+    ! So, check the validity of its value!
+    ! Presentally, the number of schedule is not so large. Hence,..
+    if (.not.(sch%n.ge.0 .and. sch%n.lt.20)) then
+      write(*,*) 'Assertion fault. sch%n may be contaminated'
+      stop 9999
     end if
   end subroutine
 
