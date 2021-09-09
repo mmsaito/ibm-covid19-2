@@ -1,0 +1,64 @@
+#(make 2>&1) > err
+FC = nvfortran
+CC = nvc
+#OPT = -pg 
+#OPT = -fopenmp -O3
+OPT = -O0 -Kieee #-fPIC
+#OPT = -g -Mbounds -Mchkfpstk -Mchkstk
+OPT += -g -Mpreprocess
+###OPT += -Mcudalib -acc -Minfo=acc -ta=tesla,managed
+OPT += -Mcuda -acc -Minfo=acc -ta=tesla,managed
+OPT += -DUSE_NVTX -lnvToolsExt
+
+
+# make empty below in other than MacOS
+#MACOSLIB = -lgcc_eh
+MACOSLIB =
+
+OBJ1 = mt19937ar.o \
+	nvtx.o \
+	unreal.o \
+	unreal_frame.o \
+	unreal_frame_t.o \
+	unreal_record.o \
+	unreal_x_misc.o \
+	model1.o jcl_sh1.o qsort.o is_nan.o
+
+all: jcl_sh1.pgi
+
+hook.so: hook.o unreal_frame_t.o 
+	$(FC) -shared hook.o unreal_frame_t.o $(OPT) $(MACOSLIB) -o $@ 
+
+jcl_sh1.pgi: $(OBJ1)
+	$(FC) $(OBJ1) $(OPT) $(MACOSLIB) -o $@ 
+
+pick_triplog.so: pick_triplog.f90 
+#	$(FC) $< -Kieee -shared -fPIC -o $@
+	gfortran  $< -fPIC -fbounds-check -shared -o pick_triplog.so
+
+.SUFFIXES: 
+.SUFFIXES: .c .f .f90 .o 
+
+.c.o:
+	$(CC) -c $(OPT) $<
+
+.f90.o:
+	$(FC) -c $(OPT)  $<
+
+.f.o:
+	$(FC) -c $(OPT)  $<
+
+argtest:
+	echoarg /C /B /D /E c:\hoge
+clean:
+	rm *.o *.exe *.mod jcl_sh1.pgi
+
+# dep
+unreal.o: model1.o
+#model1.o: hook.o unreal_frame.o
+model1.o:  unreal_frame.o
+unreal_frame.o: unreal_record.o nvtx.o
+unreal_record.o: unreal_frame_t.o nvtx.o
+unreal_frame_t.o: unreal_x_misc.o
+#hook.o: unreal_frame_t.o 
+unreal_x_misc.o: mt19937ar.o 
