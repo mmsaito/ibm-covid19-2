@@ -1424,7 +1424,8 @@ contains
     logical :: logTrip
 
     logPP   = .false. ! logflag
-    logTrip = .true.  ! logflag
+    !logTrip = .true.  ! logflag
+    logTrip = .false.  ! logflag
 
 
     ! make city obj visible in schedVisitor().
