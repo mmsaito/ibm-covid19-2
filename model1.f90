@@ -1090,7 +1090,7 @@ contains
     integer, parameter :: n_daily_visitors = 1000
     integer :: n_game_visitors
     integer, save ::  dayFstEval = INT4_MIN
-    integer :: i_area, n_rest, i_rest, n_visit_games
+    integer :: i_area, n_rest, i_rest, n_visit_games, n_places
     logical :: doesMatch
 
     tm    = timecomp(t)
@@ -1140,9 +1140,14 @@ contains
           gl_person_intervEvt(p%pe_gid, j)%time = sch%time(sch%n)
         end if
 
+        ! move anywhere before visiting a rstaurant
+        sch%n = sch%n + 1
+        n_places = size(gl_place_idx)
+        sch%time  (sch%n) = city__%conference(iConf)%end_time
+        sch%pl_gid(sch%n) = irndIn(seed, 1, n_places)
+
         ! to do: make sure visit a restaurant every day
         sch%n = sch%n + 1
-
         i_area = city__%conference(iConf)%area_t
         n_rest = size(city__%area(i_area)%place(PL_REST)%o)
 
@@ -1398,7 +1403,7 @@ contains
     city_%time = 0
   end subroutine
 
-  subroutine run1 (recstep, tStop, dir, tag, city_, iseed)
+  subroutine run1 (recstep, tStop, dir, tag, city_, iseed, logPP, logTrip)
     use Record
 !!    !$ use omp_lib
 
@@ -1413,20 +1418,13 @@ contains
     integer, parameter :: os3 = 2333
     integer, parameter :: os4 = 2334
     type(nVis) :: pop(size(city_%area))
+    logical :: logPP, logTrip
 
     !場所毎訪問者数を記録するもののリスト
     integer, parameter :: mask(8) = &
       (/PL_CRAM,PL_SCH,PL_CORP,PL_HOME, PL_SUPER, PL_PARK, PL_HOSP, PL_TRAIN/)
     !integer, parameter :: mask(7) = &
     !  (/PL_CRAM,PL_SCH,PL_CORP,PL_SUPER,PL_PARK,PL_HOSP,PL_TRAIN/)
-
-    logical :: logPP
-    logical :: logTrip
-
-    logPP   = .false. ! logflag
-    !logTrip = .true.  ! logflag
-    logTrip = .false.  ! logflag
-
 
     ! make city obj visible in schedVisitor().
     city__ => city_

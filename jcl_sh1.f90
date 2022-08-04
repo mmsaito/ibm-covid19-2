@@ -6,8 +6,9 @@ program JCL1
   integer :: seed(256), t0, t1, uptoDate
   integer, external :: time, utime
   character(256) :: f_city, f_conference, f_interv, tag, tmp, f_cafe
-  integer :: iseed
+  integer :: iseed, iarg
   type(place_t), allocatable, dimension(:) :: plset_save
+  logical :: logPP = .false., logTrip = .false.
 
 !  call hookTest()
 
@@ -42,6 +43,21 @@ program JCL1
     f_cafe = ''
   end if
 
+  ! the eight-th and later arguments may come in out of order.
+  iarg = 8
+  do while (iarg .le. iargc())
+    call getarg(iarg, tmp)    
+    select case (tmp)
+    case ('-logPP')
+      logPP = .true.
+      write(*,*) 'logPP is activated.'
+    case ('-logTrip')
+      logTrip = .true.
+      write(*,*) 'logTrip is activated.'
+    end select
+    iarg = iarg + 1
+  end do 
+
   call readCity(city_, f_city, f_cafe)
   call simpleReadCheck(city_)
 
@@ -62,7 +78,7 @@ program JCL1
   !call run1(180, 1440*180, "./", tag, city_, iseed)
   !call run1(180, 1440*28, "./", tag, city_, iseed)
   !call run1(180, 1440*7, "./", tag, city_, iseed)
-  call run1(60, 1440*uptoDate, "./", tag, city_, iseed)
+  call run1(60, 1440*uptoDate, "./", tag, city_, iseed, logPP, logTrip)
   t1 = utime()
   write(*,*) dble(t1 - t0) / 1000d0, "[sec]"
 
