@@ -1,0 +1,6 @@
+[submodule "ibm-saitohm-f90"]
+	path = ibm-saitohm-f90
+	url = ./ibm-saitohm-f90
+[submodule "make-city"]
+	path = make-city
+	url = ./make-city/
